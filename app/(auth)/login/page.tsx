@@ -59,6 +59,10 @@ function getErrorMessage(error?: string, email?: string) {
     return "Social sign-in failed. Check provider setup and linked account status.";
   }
 
+  if (error === "social_unexpected_error") {
+    return "Social sign-in failed unexpectedly. Try again and check server logs.";
+  }
+
   return "Sign in failed. Check your credentials and try again.";
 }
 

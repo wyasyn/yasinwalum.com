@@ -63,9 +63,10 @@ type SocialProvider = "google" | "github";
 
 async function signInSocialAction(provider: SocialProvider) {
   const callbackURL = `${env.BETTER_AUTH_URL}/dashboard`;
+  let result: { url?: string; redirect?: boolean } | null = null;
 
   try {
-    const result = await auth.api.signInSocial({
+    result = await auth.api.signInSocial({
       body: {
         provider,
         callbackURL,
@@ -74,11 +75,6 @@ async function signInSocialAction(provider: SocialProvider) {
       headers: await headers(),
     });
 
-    if (result.url) {
-      redirect(result.url);
-    }
-
-    redirect(`/login?error=social_redirect_missing&provider=${provider}`);
   } catch (error) {
     if (error instanceof APIError) {
       const status = String(error.status);
@@ -94,9 +90,15 @@ async function signInSocialAction(provider: SocialProvider) {
 
       redirect(`/login?error=${encodeURIComponent(status)}&provider=${provider}`);
     }
+
+    redirect(`/login?error=social_unexpected_error&provider=${provider}`);
   }
 
-  redirect(`/login?error=social_sign_in_failed&provider=${provider}`);
+  if (result?.url) {
+    redirect(result.url);
+  }
+
+  redirect(`/login?error=social_redirect_missing&provider=${provider}`);
 }
 
 export async function signInWithGoogleAction() {

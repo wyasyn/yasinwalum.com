@@ -15,6 +15,11 @@ export function DashboardPagination({
   totalItems,
 }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+  if (totalPages <= 1) {
+    return null;
+  }
+
   const prev = Math.max(1, page - 1);
   const next = Math.min(totalPages, page + 1);
 

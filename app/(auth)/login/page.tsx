@@ -8,9 +8,9 @@ import { loginAction } from "@/lib/actions/auth-actions";
 import { env } from "@/lib/env";
 
 type LoginPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     error?: string;
-  };
+  }>;
 };
 
 function getErrorMessage(error?: string) {
@@ -36,7 +36,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     redirect("/dashboard");
   }
 
-  const errorMessage = getErrorMessage(searchParams?.error);
+  const resolvedSearchParams = await searchParams;
+  const errorMessage = getErrorMessage(resolvedSearchParams?.error);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md items-center p-4">

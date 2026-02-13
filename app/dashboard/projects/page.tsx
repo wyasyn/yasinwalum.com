@@ -1,27 +1,25 @@
+import Link from "next/link";
 import { desc, inArray } from "drizzle-orm";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DashboardPagination } from "@/components/dashboard/pagination";
 import {
-  createProjectAction,
   deleteProjectAction,
   toggleProjectFeaturedAction,
 } from "@/lib/actions/projects-actions";
 import { db, schema } from "@/lib/db";
+import { DashboardPagination } from "@/components/dashboard/pagination";
 import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
 
 type PageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     page?: string;
     pageSize?: string;
-  };
+  }>;
 };
 
 export default async function DashboardProjectsPage({ searchParams }: PageProps) {
-  const pagination = parsePagination(searchParams ?? {});
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const pagination = parsePagination(resolvedSearchParams);
   const totalItems = await getTotalItems("project");
   const offset = getOffset(pagination);
 
@@ -60,90 +58,15 @@ export default async function DashboardProjectsPage({ searchParams }: PageProps)
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Projects</h1>
-        <p className="text-sm text-muted-foreground">Manage mobile apps, websites, and web applications.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Projects</h1>
+          <p className="text-sm text-muted-foreground">Manage mobile apps, websites, and web apps.</p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/projects/new">New Project</Link>
+        </Button>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Create Project</CardTitle>
-          <CardDescription>Attach technologies, links, and Cloudinary thumbnails.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={createProjectAction} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" name="title" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="projectType">Type</Label>
-                <select
-                  id="projectType"
-                  name="projectType"
-                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                  required
-                >
-                  <option value="mobile-app">Mobile App</option>
-                  <option value="website">Website</option>
-                  <option value="web-app">Web App</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="summary">Summary</Label>
-              <Input id="summary" name="summary" required />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="details">Details</Label>
-              <Textarea id="details" name="details" rows={5} required />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="repoUrl">Repository URL (optional)</Label>
-                <Input id="repoUrl" name="repoUrl" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="liveUrl">Live URL (optional)</Label>
-                <Input id="liveUrl" name="liveUrl" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="thumbnailUrl">Thumbnail URL (optional)</Label>
-              <Input id="thumbnailUrl" name="thumbnailUrl" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="thumbnailFile">Upload Thumbnail to Cloudinary (optional)</Label>
-              <Input id="thumbnailFile" name="thumbnailFile" type="file" accept="image/*" />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Attach Skills</Label>
-              <div className="grid gap-2 md:grid-cols-3">
-                {skills.map((skill) => (
-                  <label key={skill.id} className="flex items-center gap-2 rounded border p-2 text-sm">
-                    <input className="h-4 w-4" type="checkbox" name="skillIds" value={String(skill.id)} />
-                    <span>{skill.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <label className="flex items-center gap-2 text-sm">
-              <input className="h-4 w-4" type="checkbox" name="featured" />
-              <span>Mark as featured</span>
-            </label>
-
-            <Button type="submit">Create Project</Button>
-          </form>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
@@ -168,7 +91,11 @@ export default async function DashboardProjectsPage({ searchParams }: PageProps)
                     <td className="p-2">{project.projectType}</td>
                     <td className="p-2">{project.featured ? "Yes" : "No"}</td>
                     <td className="p-2">{(projectSkillMap.get(project.id) ?? []).join(", ") || "-"}</td>
-                    <td className="space-y-2 p-2">
+                    <td className="flex flex-wrap gap-2 p-2">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/dashboard/projects/${project.id}/edit`}>Edit</Link>
+                      </Button>
+
                       <form action={toggleProjectFeaturedAction}>
                         <input type="hidden" name="id" value={project.id} />
                         <input type="hidden" name="featured" value={String(project.featured)} />
@@ -176,6 +103,7 @@ export default async function DashboardProjectsPage({ searchParams }: PageProps)
                           Toggle Featured
                         </Button>
                       </form>
+
                       <form action={deleteProjectAction}>
                         <input type="hidden" name="id" value={project.id} />
                         <Button type="submit" variant="destructive" size="sm">

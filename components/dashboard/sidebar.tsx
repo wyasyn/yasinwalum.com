@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, Newspaper, Settings, Star, User } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  CodeIcon,
+  File01Icon,
+  FolderIcon,
+  LayoutIcon,
+  SettingsIcon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
 import { logoutAction } from "@/lib/actions/auth-actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,17 +18,17 @@ import { cn } from "@/lib/utils";
 type NavItem = {
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentProps<typeof HugeiconsIcon>["icon"];
 };
 
 const items: NavItem[] = [
-  { href: "/dashboard", label: "Overview", icon: Home },
-  { href: "/dashboard/profile", label: "Profile", icon: User },
-  { href: "/dashboard/skills", label: "Skills", icon: Star },
-  { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
-  { href: "/dashboard/blog", label: "Blog", icon: Newspaper },
-  { href: "/dashboard/socials", label: "Socials", icon: Settings },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard", label: "Overview", icon: LayoutIcon },
+  { href: "/dashboard/profile", label: "Profile", icon: UserIcon },
+  { href: "/dashboard/skills", label: "Skills", icon: CodeIcon },
+  { href: "/dashboard/projects", label: "Projects", icon: FolderIcon },
+  { href: "/dashboard/blog", label: "Blog", icon: File01Icon },
+  { href: "/dashboard/socials", label: "Socials", icon: SettingsIcon },
+  { href: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export function DashboardSidebar() {
@@ -35,7 +43,6 @@ export function DashboardSidebar() {
 
       <nav className="space-y-1">
         {items.map((item) => {
-          const Icon = item.icon;
           const active = pathname === item.href;
 
           return (
@@ -49,7 +56,7 @@ export function DashboardSidebar() {
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               )}
             >
-              <Icon className="h-4 w-4" />
+              <HugeiconsIcon icon={item.icon} strokeWidth={2} className="h-4 w-4" />
               <span>{item.label}</span>
             </Link>
           );

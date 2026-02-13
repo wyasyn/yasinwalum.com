@@ -9,7 +9,7 @@ function isLoginRoute(pathname: string) {
   return pathname === "/login";
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = getSessionCookie(request);
   const isAuthenticated = Boolean(sessionCookie);

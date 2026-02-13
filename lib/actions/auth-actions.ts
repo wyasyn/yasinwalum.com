@@ -31,10 +31,18 @@ export async function loginAction(formData: FormData) {
     });
   } catch (error) {
     if (error instanceof APIError) {
-      if (error.status === "FORBIDDEN") {
+      const status = String(error.status);
+      const message = String(error.message ?? "").toLowerCase();
+
+      if (
+        status === "FORBIDDEN" ||
+        status === "403" ||
+        message.includes("email_not_verified") ||
+        message.includes("email not verified")
+      ) {
         redirect(`/login?error=email_not_verified&email=${encodeURIComponent(email)}`);
       }
-      redirect(`/login?error=${error.status}`);
+      redirect(`/login?error=${encodeURIComponent(status)}`);
     }
     redirect("/login?error=invalid_credentials");
   }

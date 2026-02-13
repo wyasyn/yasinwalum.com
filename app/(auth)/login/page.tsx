@@ -24,7 +24,7 @@ type LoginPageProps = {
   }>;
 };
 
-function getErrorMessage(error?: string) {
+function getErrorMessage(error?: string, email?: string) {
   if (!error) {
     return "";
   }
@@ -38,7 +38,13 @@ function getErrorMessage(error?: string) {
   }
 
   if (error === "email_not_verified" || error === "FORBIDDEN") {
-    return "Email is not verified. Verify your email before signing in.";
+    const address = email || "your email";
+    return `Email is not verified. Check ${address} for a verification link.`;
+  }
+
+  if (error === "403" || error === "BAD_REQUEST") {
+    const address = email || "your email";
+    return `Check ${address} for a verification link before signing in.`;
   }
 
   if (error === "INVALID_EMAIL_OR_PASSWORD" || error === "UNAUTHORIZED") {
@@ -56,8 +62,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   const resolvedSearchParams = await searchParams;
-  const errorMessage = getErrorMessage(resolvedSearchParams?.error);
   const loginEmail = resolvedSearchParams?.email || env.ADMIN_EMAIL;
+  const errorMessage = getErrorMessage(resolvedSearchParams?.error, loginEmail);
   const googleEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
   const githubEnabled = Boolean(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET);
 

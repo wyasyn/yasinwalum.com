@@ -77,13 +77,26 @@ async function signInSocialAction(provider: SocialProvider) {
     if (result.url) {
       redirect(result.url);
     }
+
+    redirect(`/login?error=social_redirect_missing&provider=${provider}`);
   } catch (error) {
     if (error instanceof APIError) {
-      redirect(`/login?error=${error.status}`);
+      const status = String(error.status);
+      const message = String(error.message ?? "").toLowerCase();
+
+      if (
+        message.includes("account_not_linked") ||
+        message.includes("account not linked") ||
+        message.includes("signup disabled")
+      ) {
+        redirect(`/login?error=social_account_not_linked&provider=${provider}`);
+      }
+
+      redirect(`/login?error=${encodeURIComponent(status)}&provider=${provider}`);
     }
   }
 
-  redirect("/login?error=social_sign_in_failed");
+  redirect(`/login?error=social_sign_in_failed&provider=${provider}`);
 }
 
 export async function signInWithGoogleAction() {

@@ -51,6 +51,14 @@ function getErrorMessage(error?: string, email?: string) {
     return "Invalid email or password.";
   }
 
+  if (error === "social_account_not_linked") {
+    return "Social account is not linked to your admin user yet. Sign in with email/password first.";
+  }
+
+  if (error === "social_sign_in_failed" || error === "social_redirect_missing") {
+    return "Social sign-in failed. Check provider setup and linked account status.";
+  }
+
   return "Sign in failed. Check your credentials and try again.";
 }
 

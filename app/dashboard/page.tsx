@@ -1,49 +1,36 @@
 import Link from "next/link";
-import { count, desc } from "drizzle-orm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { db, schema } from "@/lib/db";
-import { requireAdminSession } from "@/lib/auth/session";
 import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
+import { getOverviewData } from "@/lib/dashboard-queries";
+import { requireAdminSession } from "@/lib/auth/session";
 
 export default async function DashboardOverviewPage() {
   await requireAdminSession();
-
-  let projectsCount: Array<{ value: number }> = [];
-  let postsCount: Array<{ value: number }> = [];
-  let skillsCount: Array<{ value: number }> = [];
-  let socialsCount: Array<{ value: number }> = [];
-  let latestProject: { title: string; slug: string } | undefined;
-  let latestPost: { title: string; slug: string } | undefined;
+  let projectsCount = 0;
+  let postsCount = 0;
+  let skillsCount = 0;
+  let socialsCount = 0;
+  let latestProject: { title: string; slug: string } | undefined = undefined;
+  let latestPost: { title: string; slug: string } | undefined = undefined;
   let dbUnavailable = false;
 
   try {
-    [projectsCount, postsCount, skillsCount, socialsCount] = await Promise.all([
-      db.select({ value: count() }).from(schema.project),
-      db.select({ value: count() }).from(schema.post),
-      db.select({ value: count() }).from(schema.skill),
-      db.select({ value: count() }).from(schema.socialLink),
-    ]);
-
-    [latestProject] = await db
-      .select({ title: schema.project.title, slug: schema.project.slug })
-      .from(schema.project)
-      .orderBy(desc(schema.project.createdAt))
-      .limit(1);
-
-    [latestPost] = await db
-      .select({ title: schema.post.title, slug: schema.post.slug })
-      .from(schema.post)
-      .orderBy(desc(schema.post.createdAt))
-      .limit(1);
+    const overview = await getOverviewData();
+    projectsCount = overview.projectsCount;
+    postsCount = overview.postsCount;
+    skillsCount = overview.skillsCount;
+    socialsCount = overview.socialsCount;
+    latestProject = overview.latestProject;
+    latestPost = overview.latestPost;
   } catch {
     dbUnavailable = true;
   }
 
   const stats = [
-    { label: "Projects", value: projectsCount[0]?.value ?? 0, href: "/dashboard/projects" },
-    { label: "Blog Posts", value: postsCount[0]?.value ?? 0, href: "/dashboard/blog" },
-    { label: "Skills", value: skillsCount[0]?.value ?? 0, href: "/dashboard/skills" },
-    { label: "Social Links", value: socialsCount[0]?.value ?? 0, href: "/dashboard/socials" },
+    { label: "Projects", value: projectsCount, href: "/dashboard/projects" },
+    { label: "Blog Posts", value: postsCount, href: "/dashboard/blog" },
+    { label: "Skills", value: skillsCount, href: "/dashboard/skills" },
+    { label: "Social Links", value: socialsCount, href: "/dashboard/socials" },
   ];
 
   return (

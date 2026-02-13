@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateSocialAction } from "@/lib/actions/socials-actions";
-import { db, schema } from "@/lib/db";
+import { getSocialByIdData, getSocialEditParams } from "@/lib/dashboard-queries";
+import { requireAdminSession } from "@/lib/auth/session";
 
 type PageProps = {
   params: Promise<{
@@ -15,6 +15,7 @@ type PageProps = {
 };
 
 export default async function EditSocialPage({ params }: PageProps) {
+  await requireAdminSession();
   const resolvedParams = await params;
   const id = Number(resolvedParams.id);
 
@@ -22,7 +23,7 @@ export default async function EditSocialPage({ params }: PageProps) {
     notFound();
   }
 
-  const [link] = await db.select().from(schema.socialLink).where(eq(schema.socialLink.id, id)).limit(1);
+  const link = await getSocialByIdData(id);
 
   if (!link) {
     notFound();
@@ -77,4 +78,8 @@ export default async function EditSocialPage({ params }: PageProps) {
       </Card>
     </div>
   );
+}
+
+export async function generateStaticParams() {
+  return getSocialEditParams();
 }

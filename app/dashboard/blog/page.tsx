@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { requireAdminSession } from "@/lib/auth/session";
 import {
   deletePostAction,
   togglePostPublishedAction,
 } from "@/lib/actions/posts-actions";
-import { db, schema } from "@/lib/db";
+import { schema } from "@/lib/db";
 import { DashboardPagination } from "@/components/dashboard/pagination";
-import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
+import { getOffset, parsePagination } from "@/lib/dashboard-utils";
 import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
+import { getPostsPageData } from "@/lib/dashboard-queries";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -21,6 +22,7 @@ type PageProps = {
 type PostRow = typeof schema.post.$inferSelect;
 
 export default async function DashboardBlogPage({ searchParams }: PageProps) {
+  await requireAdminSession();
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
   const offset = getOffset(pagination);
@@ -29,13 +31,9 @@ export default async function DashboardBlogPage({ searchParams }: PageProps) {
   let dbUnavailable = false;
 
   try {
-    totalItems = await getTotalItems("post");
-    posts = await db
-      .select()
-      .from(schema.post)
-      .orderBy(desc(schema.post.createdAt))
-      .limit(pagination.pageSize)
-      .offset(offset);
+    const data = await getPostsPageData(pagination.pageSize, offset);
+    totalItems = data.totalItems;
+    posts = data.posts;
   } catch {
     dbUnavailable = true;
   }

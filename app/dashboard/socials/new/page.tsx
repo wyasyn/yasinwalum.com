@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSocialAction } from "@/lib/actions/socials-actions";
+import { requireAdminSession } from "@/lib/auth/session";
 
-export default function NewSocialPage() {
+export default async function NewSocialPage() {
+  await requireAdminSession();
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">

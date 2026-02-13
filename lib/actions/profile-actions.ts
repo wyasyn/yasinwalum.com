@@ -1,11 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { profileSchema } from "@/lib/validators/dashboard";
 import { requireAdminSession } from "@/lib/auth/session";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
+import { DASHBOARD_CACHE_TAGS } from "@/lib/dashboard-queries";
 
 export async function saveProfileAction(formData: FormData) {
   await requireAdminSession();
@@ -63,6 +64,7 @@ export async function saveProfileAction(formData: FormData) {
     });
   }
 
+  revalidateTag(DASHBOARD_CACHE_TAGS.profile, "max");
   revalidatePath("/dashboard/profile");
   revalidatePath("/dashboard");
 }

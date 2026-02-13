@@ -1,18 +1,20 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { db, schema } from "@/lib/db";
 import { requireAdminSession } from "@/lib/auth/session";
 import { createUniqueSlug } from "@/lib/dashboard-utils";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { postSchema } from "@/lib/validators/dashboard";
+import { DASHBOARD_CACHE_TAGS } from "@/lib/dashboard-queries";
 
 function isChecked(value: FormDataEntryValue | null) {
   return value === "on" || value === "true";
 }
 
 function revalidatePosts(id?: number) {
+  revalidateTag(DASHBOARD_CACHE_TAGS.posts, "max");
   revalidatePath("/dashboard/blog");
   revalidatePath("/dashboard");
 

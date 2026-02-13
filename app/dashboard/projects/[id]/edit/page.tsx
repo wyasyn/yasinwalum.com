@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { MarkdownEditor } from "@/components/dashboard/markdown-editor";
 import { ProjectTypeSelect } from "@/components/dashboard/project-type-select";
 import { updateProjectAction } from "@/lib/actions/projects-actions";
-import { db, schema } from "@/lib/db";
-import { getSkillIdsForProject } from "@/lib/dashboard-utils";
+import { requireAdminSession } from "@/lib/auth/session";
+import {
+  getProjectByIdData,
+  getProjectEditParams,
+  getSkillIdsForProjectData,
+  getSkillsCatalog,
+} from "@/lib/dashboard-queries";
 
 type PageProps = {
   params: Promise<{
@@ -19,6 +23,7 @@ type PageProps = {
 };
 
 export default async function EditProjectPage({ params }: PageProps) {
+  await requireAdminSession();
   const resolvedParams = await params;
   const id = Number(resolvedParams.id);
 
@@ -26,13 +31,11 @@ export default async function EditProjectPage({ params }: PageProps) {
     notFound();
   }
 
-  const [project, skills, skillIds] = await Promise.all([
-    db.select().from(schema.project).where(eq(schema.project.id, id)).limit(1),
-    db.select().from(schema.skill).orderBy(desc(schema.skill.createdAt)),
-    getSkillIdsForProject(id),
+  const [item, skills, skillIds] = await Promise.all([
+    getProjectByIdData(id),
+    getSkillsCatalog(),
+    getSkillIdsForProjectData(id),
   ]);
-
-  const item = project[0];
 
   if (!item) {
     notFound();
@@ -135,4 +138,8 @@ export default async function EditProjectPage({ params }: PageProps) {
       </Card>
     </div>
   );
+}
+
+export async function generateStaticParams() {
+  return getProjectEditParams();
 }

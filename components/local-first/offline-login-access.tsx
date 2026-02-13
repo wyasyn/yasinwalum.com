@@ -79,7 +79,7 @@ export function OfflineLoginAccess({ adminEmail }: OfflineLoginAccessProps) {
         Offline access is available from this browser based on your previous admin sign-in.
       </p>
       <Button asChild className="w-full" variant="secondary">
-        <Link href="/dashboard">Continue Offline</Link>
+        <Link href="/offline-dashboard">Continue Offline</Link>
       </Button>
     </div>
   );

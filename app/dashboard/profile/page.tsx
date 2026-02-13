@@ -3,16 +3,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { getProfileOrNull } from "@/lib/dashboard-utils";
 import { saveProfileAction } from "@/lib/actions/profile-actions";
 import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
+import { getProfileData } from "@/lib/dashboard-queries";
+import { requireAdminSession } from "@/lib/auth/session";
 
 export default async function DashboardProfilePage() {
+  await requireAdminSession();
   let profile = null;
   let dbUnavailable = false;
 
   try {
-    profile = await getProfileOrNull();
+    profile = await getProfileData();
   } catch {
     dbUnavailable = true;
   }

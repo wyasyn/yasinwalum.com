@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { desc, inArray } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { requireAdminSession } from "@/lib/auth/session";
 import {
   deleteProjectAction,
   toggleProjectFeaturedAction,
 } from "@/lib/actions/projects-actions";
-import { db, schema } from "@/lib/db";
+import { schema } from "@/lib/db";
 import { DashboardPagination } from "@/components/dashboard/pagination";
-import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
+import { getOffset, parsePagination } from "@/lib/dashboard-utils";
 import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
+import { getProjectsPageData } from "@/lib/dashboard-queries";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -22,6 +23,7 @@ type ProjectRow = typeof schema.project.$inferSelect;
 type SkillRow = typeof schema.skill.$inferSelect;
 
 export default async function DashboardProjectsPage({ searchParams }: PageProps) {
+  await requireAdminSession();
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
   const offset = getOffset(pagination);
@@ -32,27 +34,11 @@ export default async function DashboardProjectsPage({ searchParams }: PageProps)
   let dbUnavailable = false;
 
   try {
-    totalItems = await getTotalItems("project");
-
-    [projects, skills] = await Promise.all([
-      db
-        .select()
-        .from(schema.project)
-        .orderBy(desc(schema.project.createdAt))
-        .limit(pagination.pageSize)
-        .offset(offset),
-      db.select().from(schema.skill).orderBy(desc(schema.skill.createdAt)),
-    ]);
-
-    const projectIds = projects.map((project) => project.id);
-
-    relations =
-      projectIds.length > 0
-        ? await db
-            .select({ projectId: schema.projectSkill.projectId, skillId: schema.projectSkill.skillId })
-            .from(schema.projectSkill)
-            .where(inArray(schema.projectSkill.projectId, projectIds))
-        : [];
+    const data = await getProjectsPageData(pagination.pageSize, offset);
+    totalItems = data.totalItems;
+    projects = data.projects;
+    skills = data.skills;
+    relations = data.relations;
   } catch {
     dbUnavailable = true;
   }

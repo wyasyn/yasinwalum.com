@@ -1,13 +1,15 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { db, schema } from "@/lib/db";
 import { requireAdminSession } from "@/lib/auth/session";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { socialSchema } from "@/lib/validators/dashboard";
+import { DASHBOARD_CACHE_TAGS } from "@/lib/dashboard-queries";
 
 function revalidateSocials(id?: number) {
+  revalidateTag(DASHBOARD_CACHE_TAGS.socials, "max");
   revalidatePath("/dashboard/socials");
   revalidatePath("/dashboard");
 

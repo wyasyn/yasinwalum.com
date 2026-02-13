@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createSkillAction } from "@/lib/actions/skills-actions";
+import { requireAdminSession } from "@/lib/auth/session";
 
-export default function NewSkillPage() {
+export default async function NewSkillPage() {
+  await requireAdminSession();
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">

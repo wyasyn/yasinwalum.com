@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardPagination } from "@/components/dashboard/pagination";
 import { deleteSkillAction } from "@/lib/actions/skills-actions";
-import { db, schema } from "@/lib/db";
-import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
+import { schema } from "@/lib/db";
+import { getOffset, parsePagination } from "@/lib/dashboard-utils";
 import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
+import { getSkillsPageData } from "@/lib/dashboard-queries";
+import { requireAdminSession } from "@/lib/auth/session";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -18,6 +19,7 @@ type PageProps = {
 type SkillRow = typeof schema.skill.$inferSelect;
 
 export default async function DashboardSkillsPage({ searchParams }: PageProps) {
+  await requireAdminSession();
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
   const offset = getOffset(pagination);
@@ -26,13 +28,9 @@ export default async function DashboardSkillsPage({ searchParams }: PageProps) {
   let dbUnavailable = false;
 
   try {
-    totalItems = await getTotalItems("skill");
-    skills = await db
-      .select()
-      .from(schema.skill)
-      .orderBy(desc(schema.skill.createdAt))
-      .limit(pagination.pageSize)
-      .offset(offset);
+    const data = await getSkillsPageData(pagination.pageSize, offset);
+    totalItems = data.totalItems;
+    skills = data.skills;
   } catch {
     dbUnavailable = true;
   }

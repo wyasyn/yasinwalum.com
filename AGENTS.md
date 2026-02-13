@@ -42,6 +42,8 @@ It is not required by Next.js, but strongly recommended for team/AI consistency.
 - Use Hugeicons everywhere for icons.
 - Sidebar is collapsible and should preserve avatar shape in collapsed mode.
 - Markdown preview should render with proper typography styles.
+- For any route or layout with async data fetching, always provide explicit loading UX:
+  use `loading.tsx` and/or `Suspense` fallbacks so navigation never appears stalled.
 
 ## Data Rules
 

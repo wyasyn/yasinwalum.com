@@ -1,5 +1,5 @@
-const CACHE_NAME = "portfolio-dashboard-v1";
-const APP_SHELL = ["/", "/login", "/dashboard"];
+const CACHE_NAME = "portfolio-dashboard-v2";
+const APP_SHELL = ["/", "/login", "/dashboard", "/offline-dashboard"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -31,6 +31,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (url.pathname.startsWith("/api/local-first/")) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -44,12 +49,19 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(async () => {
+          if (url.pathname.startsWith("/dashboard")) {
+            const offlineDashboard = await caches.match("/offline-dashboard");
+            if (offlineDashboard) {
+              return offlineDashboard;
+            }
+          }
+
           const cached = await caches.match(request);
           if (cached) {
             return cached;
           }
 
-          return caches.match("/dashboard");
+          return caches.match("/offline-dashboard");
         }),
     );
 

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { MarkdownEditor } from "@/components/dashboard/markdown-editor";
 import { ProjectTypeSelect } from "@/components/dashboard/project-type-select";
 import { createProjectAction } from "@/lib/actions/projects-actions";
-import { db, schema } from "@/lib/db";
+import { getSkillsCatalog } from "@/lib/dashboard-queries";
+import { requireAdminSession } from "@/lib/auth/session";
 
 export default async function NewProjectPage() {
-  const skills = await db.select().from(schema.skill).orderBy(desc(schema.skill.createdAt));
+  await requireAdminSession();
+  const skills = await getSkillsCatalog();
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">

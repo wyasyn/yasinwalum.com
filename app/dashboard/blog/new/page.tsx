@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownEditor } from "@/components/dashboard/markdown-editor";
 import { createPostAction } from "@/lib/actions/posts-actions";
+import { requireAdminSession } from "@/lib/auth/session";
 
-export default function NewPostPage() {
+export default async function NewPostPage() {
+  await requireAdminSession();
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">

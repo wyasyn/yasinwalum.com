@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateSkillAction } from "@/lib/actions/skills-actions";
-import { db, schema } from "@/lib/db";
+import { getSkillByIdData, getSkillEditParams } from "@/lib/dashboard-queries";
+import { requireAdminSession } from "@/lib/auth/session";
 
 type PageProps = {
   params: Promise<{
@@ -16,6 +16,7 @@ type PageProps = {
 };
 
 export default async function EditSkillPage({ params }: PageProps) {
+  await requireAdminSession();
   const resolvedParams = await params;
   const id = Number(resolvedParams.id);
 
@@ -23,7 +24,7 @@ export default async function EditSkillPage({ params }: PageProps) {
     notFound();
   }
 
-  const [skill] = await db.select().from(schema.skill).where(eq(schema.skill.id, id)).limit(1);
+  const skill = await getSkillByIdData(id);
 
   if (!skill) {
     notFound();
@@ -94,4 +95,8 @@ export default async function EditSkillPage({ params }: PageProps) {
       </Card>
     </div>
   );
+}
+
+export async function generateStaticParams() {
+  return getSkillEditParams();
 }

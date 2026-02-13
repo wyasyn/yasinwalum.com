@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardPagination } from "@/components/dashboard/pagination";
 import { deleteSocialAction } from "@/lib/actions/socials-actions";
-import { db, schema } from "@/lib/db";
-import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
+import { schema } from "@/lib/db";
+import { getOffset, parsePagination } from "@/lib/dashboard-utils";
 import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
+import { getSocialsPageData } from "@/lib/dashboard-queries";
+import { requireAdminSession } from "@/lib/auth/session";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -18,6 +19,7 @@ type PageProps = {
 type SocialRow = typeof schema.socialLink.$inferSelect;
 
 export default async function DashboardSocialsPage({ searchParams }: PageProps) {
+  await requireAdminSession();
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
   const offset = getOffset(pagination);
@@ -26,13 +28,9 @@ export default async function DashboardSocialsPage({ searchParams }: PageProps) 
   let dbUnavailable = false;
 
   try {
-    totalItems = await getTotalItems("social");
-    socialLinks = await db
-      .select()
-      .from(schema.socialLink)
-      .orderBy(desc(schema.socialLink.createdAt))
-      .limit(pagination.pageSize)
-      .offset(offset);
+    const data = await getSocialsPageData(pagination.pageSize, offset);
+    totalItems = data.totalItems;
+    socialLinks = data.socialLinks;
   } catch {
     dbUnavailable = true;
   }

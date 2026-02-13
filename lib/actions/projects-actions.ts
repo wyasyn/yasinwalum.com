@@ -1,12 +1,13 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { db, schema } from "@/lib/db";
 import { requireAdminSession } from "@/lib/auth/session";
 import { createUniqueSlug } from "@/lib/dashboard-utils";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { projectSchema } from "@/lib/validators/dashboard";
+import { DASHBOARD_CACHE_TAGS } from "@/lib/dashboard-queries";
 
 function parseSkillIds(formData: FormData): number[] {
   const values = formData.getAll("skillIds");
@@ -21,6 +22,7 @@ function isChecked(value: FormDataEntryValue | null) {
 }
 
 function revalidateProjects(id?: number) {
+  revalidateTag(DASHBOARD_CACHE_TAGS.projects, "max");
   revalidatePath("/dashboard/projects");
   revalidatePath("/dashboard");
 

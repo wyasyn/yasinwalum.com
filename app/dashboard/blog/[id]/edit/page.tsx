@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownEditor } from "@/components/dashboard/markdown-editor";
 import { updatePostAction } from "@/lib/actions/posts-actions";
-import { db, schema } from "@/lib/db";
+import { getPostByIdData, getPostEditParams } from "@/lib/dashboard-queries";
+import { requireAdminSession } from "@/lib/auth/session";
 
 type PageProps = {
   params: Promise<{
@@ -17,6 +17,7 @@ type PageProps = {
 };
 
 export default async function EditPostPage({ params }: PageProps) {
+  await requireAdminSession();
   const resolvedParams = await params;
   const id = Number(resolvedParams.id);
 
@@ -24,7 +25,7 @@ export default async function EditPostPage({ params }: PageProps) {
     notFound();
   }
 
-  const [post] = await db.select().from(schema.post).where(eq(schema.post.id, id)).limit(1);
+  const post = await getPostByIdData(id);
 
   if (!post) {
     notFound();
@@ -94,4 +95,8 @@ export default async function EditPostPage({ params }: PageProps) {
       </Card>
     </div>
   );
+}
+
+export async function generateStaticParams() {
+  return getPostEditParams();
 }

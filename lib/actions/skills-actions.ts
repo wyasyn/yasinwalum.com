@@ -1,14 +1,17 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { db, schema } from "@/lib/db";
 import { requireAdminSession } from "@/lib/auth/session";
 import { createUniqueSlug } from "@/lib/dashboard-utils";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { skillSchema } from "@/lib/validators/dashboard";
+import { DASHBOARD_CACHE_TAGS } from "@/lib/dashboard-queries";
 
 function revalidateSkills(id?: number) {
+  revalidateTag(DASHBOARD_CACHE_TAGS.skills, "max");
+  revalidateTag(DASHBOARD_CACHE_TAGS.projects, "max");
   revalidatePath("/dashboard/skills");
   revalidatePath("/dashboard");
 

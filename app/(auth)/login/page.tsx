@@ -1,16 +1,26 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GithubIcon, GoogleIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { getCurrentSession } from "@/lib/auth/session";
-import { loginAction, signInWithGithubAction, signInWithGoogleAction } from "@/lib/actions/auth-actions";
+import {
+  loginAction,
+  resendVerificationEmailAction,
+  signInWithGithubAction,
+  signInWithGoogleAction,
+} from "@/lib/actions/auth-actions";
 import { env } from "@/lib/env";
 
 type LoginPageProps = {
   searchParams?: Promise<{
     error?: string;
+    email?: string;
+    verified?: string;
+    reset?: string;
+    verification_sent?: string;
   }>;
 };
 
@@ -27,18 +37,27 @@ function getErrorMessage(error?: string) {
     return "Only the configured admin account can access this dashboard.";
   }
 
+  if (error === "email_not_verified" || error === "FORBIDDEN") {
+    return "Email is not verified. Verify your email before signing in.";
+  }
+
+  if (error === "INVALID_EMAIL_OR_PASSWORD" || error === "UNAUTHORIZED") {
+    return "Invalid email or password.";
+  }
+
   return "Sign in failed. Check your credentials and try again.";
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await getCurrentSession();
 
-  if (session?.user?.email === env.ADMIN_EMAIL) {
+  if (session?.user?.email?.toLowerCase() === env.ADMIN_EMAIL.toLowerCase()) {
     redirect("/dashboard");
   }
 
   const resolvedSearchParams = await searchParams;
   const errorMessage = getErrorMessage(resolvedSearchParams?.error);
+  const loginEmail = resolvedSearchParams?.email || env.ADMIN_EMAIL;
   const googleEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
   const githubEnabled = Boolean(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET);
 
@@ -72,7 +91,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </div>
 
             <form action={loginAction} className="space-y-4">
-              <Input id="email" name="email" type="email" autoComplete="email" placeholder="Your Email" required />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="Your Email"
+                defaultValue={loginEmail}
+                required
+              />
 
               <Input
                 id="password"
@@ -84,11 +111,35 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               />
 
               {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
+              {resolvedSearchParams?.verified === "1" ? (
+                <p className="text-sm text-emerald-600">Email verified successfully. You can now sign in.</p>
+              ) : null}
+              {resolvedSearchParams?.reset === "1" ? (
+                <p className="text-sm text-emerald-600">Password reset completed. Sign in with your new password.</p>
+              ) : null}
+              {resolvedSearchParams?.verification_sent === "1" ? (
+                <p className="text-sm text-emerald-600">Verification email sent. Check your inbox.</p>
+              ) : null}
+
+              <div className="text-right">
+                <Link href="/forgot-password" className="text-sm text-muted-foreground underline underline-offset-4">
+                  Forgot password?
+                </Link>
+              </div>
 
               <Button type="submit" className="w-full">
                 Login
               </Button>
             </form>
+
+            {resolvedSearchParams?.error === "email_not_verified" || resolvedSearchParams?.error === "FORBIDDEN" ? (
+              <form action={resendVerificationEmailAction}>
+                <input type="hidden" name="email" value={loginEmail} />
+                <Button type="submit" variant="outline" className="w-full">
+                  Resend Verification Email
+                </Button>
+              </form>
+            ) : null}
 
             <div className="relative">
               <Separator />

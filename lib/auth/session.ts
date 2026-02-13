@@ -16,7 +16,7 @@ export async function requireAdminSession() {
     redirect("/login");
   }
 
-  if (session.user.email !== env.ADMIN_EMAIL) {
+  if (session.user.email.toLowerCase() !== env.ADMIN_EMAIL.toLowerCase()) {
     redirect("/login?error=unauthorized");
   }
 

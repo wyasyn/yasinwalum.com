@@ -10,7 +10,13 @@ const required = [
 
 type RequiredEnvKey = (typeof required)[number];
 
-type Env = Record<RequiredEnvKey, string>;
+type OptionalEnvKey =
+  | "GOOGLE_CLIENT_ID"
+  | "GOOGLE_CLIENT_SECRET"
+  | "GITHUB_CLIENT_ID"
+  | "GITHUB_CLIENT_SECRET";
+
+type Env = Record<RequiredEnvKey, string> & Partial<Record<OptionalEnvKey, string>>;
 
 function readEnv(): Env {
   const values = {} as Env;
@@ -22,6 +28,11 @@ function readEnv(): Env {
     }
     values[key] = value;
   }
+
+  values.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  values.GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  values.GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+  values.GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 
   return values;
 }

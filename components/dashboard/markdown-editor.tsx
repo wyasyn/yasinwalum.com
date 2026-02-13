@@ -293,7 +293,7 @@ export function MarkdownEditor({
             <p className="text-sm text-muted-foreground">Rendering preview...</p>
           ) : previewHtml ? (
             <article
-              className="prose prose-sm max-w-none dark:prose-invert"
+              className="markdown-preview"
               dangerouslySetInnerHTML={{ __html: previewHtml }}
             />
           ) : (

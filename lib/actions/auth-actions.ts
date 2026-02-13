@@ -45,3 +45,44 @@ export async function logoutAction() {
 
   redirect("/login");
 }
+
+type SocialProvider = "google" | "github";
+
+async function signInSocialAction(provider: SocialProvider) {
+  const callbackURL = `${env.BETTER_AUTH_URL}/dashboard`;
+
+  try {
+    const response = await auth.api.signInSocial({
+      body: {
+        provider,
+        callbackURL,
+      },
+      headers: await headers(),
+      asResponse: true,
+    });
+
+    const location = response.headers.get("location");
+    if (location) {
+      redirect(location);
+    }
+
+    const payload = (await response.json()) as { url?: string };
+    if (payload.url) {
+      redirect(payload.url);
+    }
+  } catch (error) {
+    if (error instanceof APIError) {
+      redirect(`/login?error=${error.status}`);
+    }
+  }
+
+  redirect("/login?error=social_sign_in_failed");
+}
+
+export async function signInWithGoogleAction() {
+  await signInSocialAction("google");
+}
+
+export async function signInWithGithubAction() {
+  await signInSocialAction("github");
+}

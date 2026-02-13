@@ -6,11 +6,11 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
 
   return (
     <div className="md:flex">
-      <DashboardSidebar />
+      <DashboardSidebar adminEmail={session.user.email} />
       <main className="min-h-screen flex-1 p-4 md:p-8">{children}</main>
     </div>
   );

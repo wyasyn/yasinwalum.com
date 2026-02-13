@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownEditor } from "@/components/dashboard/markdown-editor";
+import { ProjectTypeSelect } from "@/components/dashboard/project-type-select";
 import { createProjectAction } from "@/lib/actions/projects-actions";
 import { db, schema } from "@/lib/db";
 
@@ -37,17 +38,8 @@ export default async function NewProjectPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="projectType">Type</Label>
-              <select
-                id="projectType"
-                name="projectType"
-                className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                required
-              >
-                <option value="mobile-app">Mobile App</option>
-                <option value="website">Website</option>
-                <option value="web-app">Web App</option>
-              </select>
+              <Label>Type</Label>
+              <ProjectTypeSelect name="projectType" defaultValue="mobile-app" />
             </div>
 
             <div className="space-y-2 lg:col-span-2">

@@ -24,7 +24,7 @@ export default function NewSocialPage() {
           <CardDescription>Add URL and image source.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createSocialAction} className="grid gap-6 lg:grid-cols-2">
+          <form data-local-first="on" data-local-entity="socials" data-local-op="create" action={createSocialAction} className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Platform Name</Label>
               <Input id="name" name="name" required />

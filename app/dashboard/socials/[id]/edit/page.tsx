@@ -46,7 +46,7 @@ export default async function EditSocialPage({ params }: PageProps) {
           <CardDescription>Save changes for this social profile.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={updateSocialAction} className="grid gap-6 lg:grid-cols-2">
+          <form data-local-first="on" data-local-entity="socials" data-local-op="update" action={updateSocialAction} className="grid gap-6 lg:grid-cols-2">
             <input type="hidden" name="id" value={link.id} />
 
             <div className="space-y-2">

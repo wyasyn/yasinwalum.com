@@ -23,7 +23,7 @@ export default function DashboardSettingsPage() {
           <p className="text-muted-foreground">
             Signup is disabled. Only the seeded admin user can sign in.
           </p>
-          <form action={logoutAction}>
+          <form data-local-first="off" action={logoutAction}>
             <Button variant="outline" type="submit">
               Sign Out
             </Button>

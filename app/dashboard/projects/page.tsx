@@ -9,6 +9,7 @@ import {
 import { db, schema } from "@/lib/db";
 import { DashboardPagination } from "@/components/dashboard/pagination";
 import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
+import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -17,31 +18,44 @@ type PageProps = {
   }>;
 };
 
+type ProjectRow = typeof schema.project.$inferSelect;
+type SkillRow = typeof schema.skill.$inferSelect;
+
 export default async function DashboardProjectsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
-  const totalItems = await getTotalItems("project");
   const offset = getOffset(pagination);
+  let totalItems = 0;
+  let projects: ProjectRow[] = [];
+  let skills: SkillRow[] = [];
+  let relations: Array<{ projectId: number; skillId: number }> = [];
+  let dbUnavailable = false;
 
-  const [projects, skills] = await Promise.all([
-    db
-      .select()
-      .from(schema.project)
-      .orderBy(desc(schema.project.createdAt))
-      .limit(pagination.pageSize)
-      .offset(offset),
-    db.select().from(schema.skill).orderBy(desc(schema.skill.createdAt)),
-  ]);
+  try {
+    totalItems = await getTotalItems("project");
 
-  const projectIds = projects.map((project) => project.id);
+    [projects, skills] = await Promise.all([
+      db
+        .select()
+        .from(schema.project)
+        .orderBy(desc(schema.project.createdAt))
+        .limit(pagination.pageSize)
+        .offset(offset),
+      db.select().from(schema.skill).orderBy(desc(schema.skill.createdAt)),
+    ]);
 
-  const relations =
-    projectIds.length > 0
-      ? await db
-          .select({ projectId: schema.projectSkill.projectId, skillId: schema.projectSkill.skillId })
-          .from(schema.projectSkill)
-          .where(inArray(schema.projectSkill.projectId, projectIds))
-      : [];
+    const projectIds = projects.map((project) => project.id);
+
+    relations =
+      projectIds.length > 0
+        ? await db
+            .select({ projectId: schema.projectSkill.projectId, skillId: schema.projectSkill.skillId })
+            .from(schema.projectSkill)
+            .where(inArray(schema.projectSkill.projectId, projectIds))
+        : [];
+  } catch {
+    dbUnavailable = true;
+  }
 
   const skillMap = new Map(skills.map((item) => [item.id, item.name]));
   const projectSkillMap = new Map<number, string[]>();
@@ -67,6 +81,7 @@ export default async function DashboardProjectsPage({ searchParams }: PageProps)
           <Link href="/dashboard/projects/new">New Project</Link>
         </Button>
       </div>
+      <OfflineDataPanel entity="projects" dbUnavailable={dbUnavailable} />
 
       <Card>
         <CardHeader>
@@ -96,7 +111,7 @@ export default async function DashboardProjectsPage({ searchParams }: PageProps)
                         <Link href={`/dashboard/projects/${project.id}/edit`}>Edit</Link>
                       </Button>
 
-                      <form action={toggleProjectFeaturedAction}>
+                      <form data-local-first="on" data-local-entity="projects" data-local-op="toggle_featured" action={toggleProjectFeaturedAction}>
                         <input type="hidden" name="id" value={project.id} />
                         <input type="hidden" name="featured" value={String(project.featured)} />
                         <Button type="submit" variant="outline" size="sm">
@@ -104,7 +119,7 @@ export default async function DashboardProjectsPage({ searchParams }: PageProps)
                         </Button>
                       </form>
 
-                      <form action={deleteProjectAction}>
+                      <form data-local-first="on" data-local-entity="projects" data-local-op="delete" action={deleteProjectAction}>
                         <input type="hidden" name="id" value={project.id} />
                         <Button type="submit" variant="destructive" size="sm">
                           Delete

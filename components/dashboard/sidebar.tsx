@@ -17,6 +17,7 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { logoutAction } from "@/lib/actions/auth-actions";
+import { clearOfflineUnlock } from "@/components/local-first/local-first-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -156,7 +157,14 @@ export function DashboardSidebar({ adminEmail }: DashboardSidebarProps) {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <form action={logoutAction} className="w-full">
+              <form
+                action={logoutAction}
+                className="w-full"
+                data-local-first="off"
+                onSubmit={() => {
+                  clearOfflineUnlock();
+                }}
+              >
                 <button type="submit" className="flex w-full items-center gap-2 text-left">
                   <HugeiconsIcon icon={LogoutIcon} strokeWidth={2} className="h-4 w-4" />
                   Logout

@@ -25,7 +25,7 @@ export default function NewSkillPage() {
           <CardDescription>Use either URL or upload an image to Cloudinary.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createSkillAction} className="grid gap-6 lg:grid-cols-2">
+          <form data-local-first="on" data-local-entity="skills" data-local-op="create" action={createSkillAction} className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Skill Name</Label>
               <Input id="name" name="name" required />

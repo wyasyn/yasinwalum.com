@@ -3,28 +3,41 @@ import { count, desc } from "drizzle-orm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { db, schema } from "@/lib/db";
 import { requireAdminSession } from "@/lib/auth/session";
+import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
 
 export default async function DashboardOverviewPage() {
   await requireAdminSession();
 
-  const [projectsCount, postsCount, skillsCount, socialsCount] = await Promise.all([
-    db.select({ value: count() }).from(schema.project),
-    db.select({ value: count() }).from(schema.post),
-    db.select({ value: count() }).from(schema.skill),
-    db.select({ value: count() }).from(schema.socialLink),
-  ]);
+  let projectsCount: Array<{ value: number }> = [];
+  let postsCount: Array<{ value: number }> = [];
+  let skillsCount: Array<{ value: number }> = [];
+  let socialsCount: Array<{ value: number }> = [];
+  let latestProject: { title: string; slug: string } | undefined;
+  let latestPost: { title: string; slug: string } | undefined;
+  let dbUnavailable = false;
 
-  const [latestProject] = await db
-    .select({ title: schema.project.title, slug: schema.project.slug })
-    .from(schema.project)
-    .orderBy(desc(schema.project.createdAt))
-    .limit(1);
+  try {
+    [projectsCount, postsCount, skillsCount, socialsCount] = await Promise.all([
+      db.select({ value: count() }).from(schema.project),
+      db.select({ value: count() }).from(schema.post),
+      db.select({ value: count() }).from(schema.skill),
+      db.select({ value: count() }).from(schema.socialLink),
+    ]);
 
-  const [latestPost] = await db
-    .select({ title: schema.post.title, slug: schema.post.slug })
-    .from(schema.post)
-    .orderBy(desc(schema.post.createdAt))
-    .limit(1);
+    [latestProject] = await db
+      .select({ title: schema.project.title, slug: schema.project.slug })
+      .from(schema.project)
+      .orderBy(desc(schema.project.createdAt))
+      .limit(1);
+
+    [latestPost] = await db
+      .select({ title: schema.post.title, slug: schema.post.slug })
+      .from(schema.post)
+      .orderBy(desc(schema.post.createdAt))
+      .limit(1);
+  } catch {
+    dbUnavailable = true;
+  }
 
   const stats = [
     { label: "Projects", value: projectsCount[0]?.value ?? 0, href: "/dashboard/projects" },
@@ -41,6 +54,7 @@ export default async function DashboardOverviewPage() {
           Manage profile, projects, blog posts, skills, and social links.
         </p>
       </div>
+      <OfflineDataPanel entity="overview" dbUnavailable={dbUnavailable} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (

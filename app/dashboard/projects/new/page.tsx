@@ -31,7 +31,7 @@ export default async function NewProjectPage() {
           <CardDescription>Use markdown for full details with live preview.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createProjectAction} className="grid gap-6 lg:grid-cols-2">
+          <form data-local-first="on" data-local-entity="projects" data-local-op="create" action={createProjectAction} className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
               <Input id="title" name="title" required />

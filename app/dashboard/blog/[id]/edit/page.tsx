@@ -48,7 +48,7 @@ export default async function EditPostPage({ params }: PageProps) {
           <CardDescription>Preview markdown before saving.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={updatePostAction} className="grid gap-6 lg:grid-cols-2">
+          <form data-local-first="on" data-local-entity="posts" data-local-op="update" action={updatePostAction} className="grid gap-6 lg:grid-cols-2">
             <input type="hidden" name="id" value={post.id} />
 
             <div className="space-y-2 lg:col-span-2">

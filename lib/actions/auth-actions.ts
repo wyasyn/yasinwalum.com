@@ -56,7 +56,7 @@ export async function logoutAction() {
     asResponse: true,
   });
 
-  redirect("/login");
+  redirect("/login?logged_out=1");
 }
 
 type SocialProvider = "google" | "github";

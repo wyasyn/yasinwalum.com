@@ -6,6 +6,7 @@ import { DashboardPagination } from "@/components/dashboard/pagination";
 import { deleteSkillAction } from "@/lib/actions/skills-actions";
 import { db, schema } from "@/lib/db";
 import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
+import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -14,18 +15,27 @@ type PageProps = {
   }>;
 };
 
+type SkillRow = typeof schema.skill.$inferSelect;
+
 export default async function DashboardSkillsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
-  const totalItems = await getTotalItems("skill");
   const offset = getOffset(pagination);
+  let totalItems = 0;
+  let skills: SkillRow[] = [];
+  let dbUnavailable = false;
 
-  const skills = await db
-    .select()
-    .from(schema.skill)
-    .orderBy(desc(schema.skill.createdAt))
-    .limit(pagination.pageSize)
-    .offset(offset);
+  try {
+    totalItems = await getTotalItems("skill");
+    skills = await db
+      .select()
+      .from(schema.skill)
+      .orderBy(desc(schema.skill.createdAt))
+      .limit(pagination.pageSize)
+      .offset(offset);
+  } catch {
+    dbUnavailable = true;
+  }
 
   return (
     <div className="space-y-6">
@@ -38,6 +48,7 @@ export default async function DashboardSkillsPage({ searchParams }: PageProps) {
           <Link href="/dashboard/skills/new">New Skill</Link>
         </Button>
       </div>
+      <OfflineDataPanel entity="skills" dbUnavailable={dbUnavailable} />
 
       <Card>
         <CardHeader>
@@ -64,7 +75,7 @@ export default async function DashboardSkillsPage({ searchParams }: PageProps) {
                       <Button asChild variant="outline" size="sm">
                         <Link href={`/dashboard/skills/${item.id}/edit`}>Edit</Link>
                       </Button>
-                      <form action={deleteSkillAction}>
+                      <form data-local-first="on" data-local-entity="skills" data-local-op="delete" action={deleteSkillAction}>
                         <input type="hidden" name="id" value={item.id} />
                         <Button type="submit" variant="destructive" size="sm">
                           Delete

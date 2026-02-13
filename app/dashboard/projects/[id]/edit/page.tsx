@@ -56,7 +56,7 @@ export default async function EditProjectPage({ params }: PageProps) {
           <CardDescription>Changes are reflected after save.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={updateProjectAction} className="grid gap-6 lg:grid-cols-2">
+          <form data-local-first="on" data-local-entity="projects" data-local-op="update" action={updateProjectAction} className="grid gap-6 lg:grid-cols-2">
             <input type="hidden" name="id" value={item.id} />
 
             <div className="space-y-2">

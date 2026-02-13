@@ -9,6 +9,7 @@ import {
 import { db, schema } from "@/lib/db";
 import { DashboardPagination } from "@/components/dashboard/pagination";
 import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
+import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -17,18 +18,27 @@ type PageProps = {
   }>;
 };
 
+type PostRow = typeof schema.post.$inferSelect;
+
 export default async function DashboardBlogPage({ searchParams }: PageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
-  const totalItems = await getTotalItems("post");
   const offset = getOffset(pagination);
+  let totalItems = 0;
+  let posts: PostRow[] = [];
+  let dbUnavailable = false;
 
-  const posts = await db
-    .select()
-    .from(schema.post)
-    .orderBy(desc(schema.post.createdAt))
-    .limit(pagination.pageSize)
-    .offset(offset);
+  try {
+    totalItems = await getTotalItems("post");
+    posts = await db
+      .select()
+      .from(schema.post)
+      .orderBy(desc(schema.post.createdAt))
+      .limit(pagination.pageSize)
+      .offset(offset);
+  } catch {
+    dbUnavailable = true;
+  }
 
   return (
     <div className="space-y-6">
@@ -41,6 +51,7 @@ export default async function DashboardBlogPage({ searchParams }: PageProps) {
           <Link href="/dashboard/blog/new">New Post</Link>
         </Button>
       </div>
+      <OfflineDataPanel entity="posts" dbUnavailable={dbUnavailable} />
 
       <Card>
         <CardHeader>
@@ -68,7 +79,7 @@ export default async function DashboardBlogPage({ searchParams }: PageProps) {
                         <Link href={`/dashboard/blog/${post.id}/edit`}>Edit</Link>
                       </Button>
 
-                      <form action={togglePostPublishedAction}>
+                      <form data-local-first="on" data-local-entity="posts" data-local-op="toggle_published" action={togglePostPublishedAction}>
                         <input type="hidden" name="id" value={post.id} />
                         <input type="hidden" name="published" value={String(post.published)} />
                         <Button type="submit" variant="outline" size="sm">
@@ -76,7 +87,7 @@ export default async function DashboardBlogPage({ searchParams }: PageProps) {
                         </Button>
                       </form>
 
-                      <form action={deletePostAction}>
+                      <form data-local-first="on" data-local-entity="posts" data-local-op="delete" action={deletePostAction}>
                         <input type="hidden" name="id" value={post.id} />
                         <Button type="submit" variant="destructive" size="sm">
                           Delete

@@ -5,9 +5,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { getProfileOrNull } from "@/lib/dashboard-utils";
 import { saveProfileAction } from "@/lib/actions/profile-actions";
+import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
 
 export default async function DashboardProfilePage() {
-  const profile = await getProfileOrNull();
+  let profile = null;
+  let dbUnavailable = false;
+
+  try {
+    profile = await getProfileOrNull();
+  } catch {
+    dbUnavailable = true;
+  }
 
   return (
     <div className="space-y-6">
@@ -15,6 +23,7 @@ export default async function DashboardProfilePage() {
         <h1 className="text-2xl font-semibold">Profile</h1>
         <p className="text-sm text-muted-foreground">Update your public bio and personal details.</p>
       </div>
+      <OfflineDataPanel entity="profile" dbUnavailable={dbUnavailable} />
 
       <Card>
         <CardHeader>
@@ -22,7 +31,7 @@ export default async function DashboardProfilePage() {
           <CardDescription>This powers the hero/about section of your public site.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={saveProfileAction} className="space-y-4">
+          <form data-local-first="on" data-local-entity="profile" data-local-op="upsert" action={saveProfileAction} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>

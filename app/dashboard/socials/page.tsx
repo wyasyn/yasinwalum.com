@@ -6,6 +6,7 @@ import { DashboardPagination } from "@/components/dashboard/pagination";
 import { deleteSocialAction } from "@/lib/actions/socials-actions";
 import { db, schema } from "@/lib/db";
 import { getOffset, getTotalItems, parsePagination } from "@/lib/dashboard-utils";
+import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -14,18 +15,27 @@ type PageProps = {
   }>;
 };
 
+type SocialRow = typeof schema.socialLink.$inferSelect;
+
 export default async function DashboardSocialsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
-  const totalItems = await getTotalItems("social");
   const offset = getOffset(pagination);
+  let totalItems = 0;
+  let socialLinks: SocialRow[] = [];
+  let dbUnavailable = false;
 
-  const socialLinks = await db
-    .select()
-    .from(schema.socialLink)
-    .orderBy(desc(schema.socialLink.createdAt))
-    .limit(pagination.pageSize)
-    .offset(offset);
+  try {
+    totalItems = await getTotalItems("social");
+    socialLinks = await db
+      .select()
+      .from(schema.socialLink)
+      .orderBy(desc(schema.socialLink.createdAt))
+      .limit(pagination.pageSize)
+      .offset(offset);
+  } catch {
+    dbUnavailable = true;
+  }
 
   return (
     <div className="space-y-6">
@@ -38,6 +48,7 @@ export default async function DashboardSocialsPage({ searchParams }: PageProps) 
           <Link href="/dashboard/socials/new">New Social Link</Link>
         </Button>
       </div>
+      <OfflineDataPanel entity="socials" dbUnavailable={dbUnavailable} />
 
       <Card>
         <CardHeader>
@@ -66,7 +77,7 @@ export default async function DashboardSocialsPage({ searchParams }: PageProps) 
                       <Button asChild variant="outline" size="sm">
                         <Link href={`/dashboard/socials/${link.id}/edit`}>Edit</Link>
                       </Button>
-                      <form action={deleteSocialAction}>
+                      <form data-local-first="on" data-local-entity="socials" data-local-op="delete" action={deleteSocialAction}>
                         <input type="hidden" name="id" value={link.id} />
                         <Button type="submit" variant="destructive" size="sm">
                           Delete

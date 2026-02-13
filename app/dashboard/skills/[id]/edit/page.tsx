@@ -47,7 +47,7 @@ export default async function EditSkillPage({ params }: PageProps) {
           <CardDescription>Changes are saved immediately when submitted.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={updateSkillAction} className="grid gap-6 lg:grid-cols-2">
+          <form data-local-first="on" data-local-entity="skills" data-local-op="update" action={updateSkillAction} className="grid gap-6 lg:grid-cols-2">
             <input type="hidden" name="id" value={skill.id} />
 
             <div className="space-y-2">

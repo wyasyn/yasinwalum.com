@@ -26,7 +26,7 @@ export default function NewPostPage() {
           <CardDescription>Markdown content editor uses full-width preview mode.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createPostAction} className="grid gap-6 lg:grid-cols-2">
+          <form data-local-first="on" data-local-entity="posts" data-local-op="create" action={createPostAction} className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-2 lg:col-span-2">
               <Label htmlFor="title">Title</Label>
               <Input id="title" name="title" required />

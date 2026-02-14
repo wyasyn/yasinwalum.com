@@ -182,17 +182,21 @@ export function PublicDockClient({ socialLinks }: PublicDockClientProps) {
               </Tooltip>
             </div>
 
-            <div className="group relative ml-1 border-l border-border pl-3 max-[374px]:ml-0.5 max-[374px]:pl-2">
-              <div className="pointer-events-none absolute bottom-full left-1/2 z-50 -translate-x-1/2 translate-y-2 scale-95 opacity-0 transition-all duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100">
-                <SocialsDropdown socialLinks={socialLinks} />
-              </div>
-              <button
-                type="button"
-                aria-label="Social links"
-                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent bg-transparent text-muted-foreground transition duration-200 hover:bg-card/60 hover:text-foreground max-[374px]:h-10 max-[374px]:w-10 md:h-14 md:w-14 md:hover:scale-115"
-              >
-                <HugeiconsIcon icon={LanguageCircleIcon} className="size-5 md:size-6" strokeWidth={1.8} />
-              </button>
+            <div className="ml-1 border-l border-border pl-3 max-[374px]:ml-0.5 max-[374px]:pl-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Social links"
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent bg-transparent text-muted-foreground transition duration-200 hover:bg-card/60 hover:text-foreground max-[374px]:h-10 max-[374px]:w-10 md:h-14 md:w-14 md:hover:scale-115"
+                  >
+                    <HugeiconsIcon icon={LanguageCircleIcon} className="size-5 md:size-6" strokeWidth={1.8} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="border-0 bg-transparent p-0 shadow-none">
+                  <SocialsDropdown socialLinks={socialLinks} />
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </TooltipProvider>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { markdownToHtml } from "@/lib/markdown";
 import { getPublicProjectBySlug, getPublicProjectSlugs } from "@/lib/public-queries";
@@ -10,6 +11,18 @@ type ProjectDetailsPageProps = {
 };
 
 export const revalidate = 300;
+const PLACEHOLDER_IMAGE_SRC = "/placeholder-image.svg";
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxMiIgdmlld0JveD0iMCAwIDE2IDEyIiBmaWxsPSJub25lIj48cmVjdCB3aWR0aD0iMTYiIGhlaWdodD0iMTIiIGZpbGw9IiNFNUU3RUIiLz48L3N2Zz4=";
+
+function getSafeImageSrc(imageUrl: string | null | undefined) {
+  if (!imageUrl) {
+    return PLACEHOLDER_IMAGE_SRC;
+  }
+
+  const normalized = imageUrl.trim();
+  return normalized.length > 0 ? normalized : PLACEHOLDER_IMAGE_SRC;
+}
 
 export async function generateStaticParams() {
   const projects = await getPublicProjectSlugs();
@@ -34,6 +47,19 @@ export default async function ProjectDetailsPage({ params }: ProjectDetailsPageP
         <h1 className="text-3xl font-semibold">{project.title}</h1>
         <p className="text-sm text-muted-foreground">{project.summary}</p>
       </header>
+
+      <section className="relative aspect-[16/9] overflow-hidden rounded-lg border bg-muted">
+        <Image
+          src={getSafeImageSrc(project.thumbnailUrl)}
+          alt={project.title}
+          fill
+          className="object-cover"
+          sizes="(min-width: 1024px) 1024px, 100vw"
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
+          priority
+        />
+      </section>
 
       <section className="rounded-lg border p-4">
         <h2 className="text-lg font-medium">Metadata</h2>

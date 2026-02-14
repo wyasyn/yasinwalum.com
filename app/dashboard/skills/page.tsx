@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,33 @@ export default async function DashboardSkillsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
   const offset = getOffset(pagination);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Skills</h1>
+          <p className="text-sm text-muted-foreground">Manage all technologies and capabilities.</p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/skills/new">New Skill</Link>
+        </Button>
+      </div>
+
+      <Suspense fallback={<SkillsTableLoadingSection />}>
+        <SkillsDataSection pagination={pagination} offset={offset} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function SkillsDataSection({
+  pagination,
+  offset,
+}: {
+  pagination: ReturnType<typeof parsePagination>;
+  offset: number;
+}) {
   let totalItems = 0;
   let skills: SkillRow[] = [];
   let dbUnavailable = false;
@@ -36,16 +64,7 @@ export default async function DashboardSkillsPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Skills</h1>
-          <p className="text-sm text-muted-foreground">Manage all technologies and capabilities.</p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/skills/new">New Skill</Link>
-        </Button>
-      </div>
+    <>
       <OfflineDataPanel entity="skills" dbUnavailable={dbUnavailable} />
 
       <Card>
@@ -92,6 +111,31 @@ export default async function DashboardSkillsPage({ searchParams }: PageProps) {
             pageSize={pagination.pageSize}
             totalItems={totalItems}
           />
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+function SkillsTableLoadingSection() {
+  return (
+    <div className="space-y-6 animate-in fade-in-0 duration-200">
+      <Card>
+        <CardHeader>
+          <CardTitle>All Skills</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="h-9 w-full animate-pulse rounded-md bg-muted/60" />
+            {Array.from({ length: 7 }).map((_, index) => (
+              <div key={index} className="grid grid-cols-4 gap-3">
+                <div className="h-5 animate-pulse rounded-md bg-muted/80" />
+                <div className="h-5 animate-pulse rounded-md bg-muted/70" />
+                <div className="h-5 animate-pulse rounded-md bg-muted/60" />
+                <div className="h-5 animate-pulse rounded-md bg-muted/50" />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

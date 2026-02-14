@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,33 @@ export default async function DashboardBlogPage({ searchParams }: PageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
   const offset = getOffset(pagination);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Blog</h1>
+          <p className="text-sm text-muted-foreground">Manage markdown posts and publishing status.</p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/blog/new">New Post</Link>
+        </Button>
+      </div>
+
+      <Suspense fallback={<BlogTableLoadingSection />}>
+        <BlogDataSection pagination={pagination} offset={offset} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function BlogDataSection({
+  pagination,
+  offset,
+}: {
+  pagination: ReturnType<typeof parsePagination>;
+  offset: number;
+}) {
   let totalItems = 0;
   let posts: PostRow[] = [];
   let dbUnavailable = false;
@@ -39,16 +67,7 @@ export default async function DashboardBlogPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Blog</h1>
-          <p className="text-sm text-muted-foreground">Manage markdown posts and publishing status.</p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/blog/new">New Post</Link>
-        </Button>
-      </div>
+    <>
       <OfflineDataPanel entity="posts" dbUnavailable={dbUnavailable} />
 
       <Card>
@@ -104,6 +123,31 @@ export default async function DashboardBlogPage({ searchParams }: PageProps) {
             pageSize={pagination.pageSize}
             totalItems={totalItems}
           />
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+function BlogTableLoadingSection() {
+  return (
+    <div className="space-y-6 animate-in fade-in-0 duration-200">
+      <Card>
+        <CardHeader>
+          <CardTitle>All Posts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="h-9 w-full animate-pulse rounded-md bg-muted/60" />
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="grid grid-cols-4 gap-3">
+                <div className="h-5 animate-pulse rounded-md bg-muted/80" />
+                <div className="h-5 animate-pulse rounded-md bg-muted/70" />
+                <div className="h-5 animate-pulse rounded-md bg-muted/60" />
+                <div className="h-5 animate-pulse rounded-md bg-muted/50" />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

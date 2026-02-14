@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,22 @@ import { requireAdminSession } from "@/lib/auth/session";
 
 export default async function DashboardProfilePage() {
   await requireAdminSession();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Profile</h1>
+        <p className="text-sm text-muted-foreground">Update your public bio and personal details.</p>
+      </div>
+
+      <Suspense fallback={<ProfileLoadingSection />}>
+        <ProfileDataSection />
+      </Suspense>
+    </div>
+  );
+}
+
+async function ProfileDataSection() {
   let profile = null;
   let dbUnavailable = false;
 
@@ -20,11 +37,7 @@ export default async function DashboardProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Profile</h1>
-        <p className="text-sm text-muted-foreground">Update your public bio and personal details.</p>
-      </div>
+    <>
       <OfflineDataPanel entity="profile" dbUnavailable={dbUnavailable} />
 
       <Card>
@@ -84,6 +97,38 @@ export default async function DashboardProfilePage() {
 
             <Button type="submit">Save Profile</Button>
           </form>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+function ProfileLoadingSection() {
+  return (
+    <div className="space-y-6 animate-in fade-in-0 duration-200">
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="h-10 animate-pulse rounded-md bg-muted/70" />
+              <div className="h-10 animate-pulse rounded-md bg-muted/70" />
+            </div>
+            <div className="h-28 animate-pulse rounded-md bg-muted/60" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="h-10 animate-pulse rounded-md bg-muted/70" />
+              <div className="h-10 animate-pulse rounded-md bg-muted/70" />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="h-10 animate-pulse rounded-md bg-muted/70" />
+              <div className="h-10 animate-pulse rounded-md bg-muted/70" />
+            </div>
+            <div className="h-10 animate-pulse rounded-md bg-muted/60" />
+            <div className="h-10 animate-pulse rounded-md bg-muted/60" />
+            <div className="h-10 w-32 animate-pulse rounded-md bg-muted/80" />
+          </div>
         </CardContent>
       </Card>
     </div>

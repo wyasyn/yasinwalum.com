@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Portfolio Dashboard",
-  description: "Admin dashboard for managing portfolio content.",
+  title: "Yasin Walum | Portfolio",
+  description: "Public portfolio showcasing projects, blog posts, profile, and social links.",
 };
 
 export default function RootLayout({

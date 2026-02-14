@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { OfflineDataPanel } from "@/components/local-first/offline-data-panel";
@@ -6,6 +7,24 @@ import { requireAdminSession } from "@/lib/auth/session";
 
 export default async function DashboardOverviewPage() {
   await requireAdminSession();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Dashboard Overview</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage profile, projects, blog posts, skills, and social links.
+        </p>
+      </div>
+
+      <Suspense fallback={<OverviewLoadingSection />}>
+        <OverviewDataSection />
+      </Suspense>
+    </div>
+  );
+}
+
+async function OverviewDataSection() {
   let projectsCount = 0;
   let postsCount = 0;
   let skillsCount = 0;
@@ -34,13 +53,7 @@ export default async function DashboardOverviewPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard Overview</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage profile, projects, blog posts, skills, and social links.
-        </p>
-      </div>
+    <>
       <OfflineDataPanel entity="overview" dbUnavailable={dbUnavailable} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -89,6 +102,35 @@ export default async function DashboardOverviewPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+    </>
+  );
+}
+
+function OverviewLoadingSection() {
+  return (
+    <div className="space-y-6 animate-in fade-in-0 duration-200">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="rounded-xl border bg-card p-4">
+            <div className="h-4 w-24 animate-pulse rounded-md bg-muted" />
+            <div className="mt-4 h-9 w-16 animate-pulse rounded-md bg-muted/80" />
+            <div className="mt-6 h-4 w-28 animate-pulse rounded-md bg-muted/60" />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div key={index} className="rounded-xl border bg-card p-4">
+            <div className="h-5 w-40 animate-pulse rounded-md bg-muted" />
+            <div className="mt-4 space-y-3">
+              <div className="h-4 w-full animate-pulse rounded-md bg-muted/80" />
+              <div className="h-4 w-5/6 animate-pulse rounded-md bg-muted/60" />
+              <div className="h-4 w-2/3 animate-pulse rounded-md bg-muted/50" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,33 @@ export default async function DashboardSocialsPage({ searchParams }: PageProps) 
   const resolvedSearchParams = (await searchParams) ?? {};
   const pagination = parsePagination(resolvedSearchParams);
   const offset = getOffset(pagination);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Social Links</h1>
+          <p className="text-sm text-muted-foreground">Manage external profile links and icon images.</p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/socials/new">New Social Link</Link>
+        </Button>
+      </div>
+
+      <Suspense fallback={<SocialsTableLoadingSection />}>
+        <SocialsDataSection pagination={pagination} offset={offset} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function SocialsDataSection({
+  pagination,
+  offset,
+}: {
+  pagination: ReturnType<typeof parsePagination>;
+  offset: number;
+}) {
   let totalItems = 0;
   let socialLinks: SocialRow[] = [];
   let dbUnavailable = false;
@@ -36,16 +64,7 @@ export default async function DashboardSocialsPage({ searchParams }: PageProps) 
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Social Links</h1>
-          <p className="text-sm text-muted-foreground">Manage external profile links and icon images.</p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/socials/new">New Social Link</Link>
-        </Button>
-      </div>
+    <>
       <OfflineDataPanel entity="socials" dbUnavailable={dbUnavailable} />
 
       <Card>
@@ -94,6 +113,30 @@ export default async function DashboardSocialsPage({ searchParams }: PageProps) 
             pageSize={pagination.pageSize}
             totalItems={totalItems}
           />
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+function SocialsTableLoadingSection() {
+  return (
+    <div className="space-y-6 animate-in fade-in-0 duration-200">
+      <Card>
+        <CardHeader>
+          <CardTitle>All Social Links</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="h-9 w-full animate-pulse rounded-md bg-muted/60" />
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="grid grid-cols-3 gap-3">
+                <div className="h-5 animate-pulse rounded-md bg-muted/80" />
+                <div className="h-5 animate-pulse rounded-md bg-muted/70" />
+                <div className="h-5 animate-pulse rounded-md bg-muted/60" />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

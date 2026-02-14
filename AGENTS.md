@@ -39,11 +39,14 @@ It is not required by Next.js, but strongly recommended for team/AI consistency.
 ## UI Rules
 
 - Keep shadcn visual language and tokens.
+- Use semantic shadcn theme tokens/classes (`bg-card`, `text-muted-foreground`, `border-border`, etc.) instead of hardcoded hex/rgba or arbitrary color values.
 - Use Hugeicons everywhere for icons.
 - Sidebar is collapsible and should preserve avatar shape in collapsed mode.
 - Markdown preview should render with proper typography styles.
 - For any route or layout with async data fetching, always provide explicit loading UX:
   use `loading.tsx` and/or `Suspense` fallbacks so navigation never appears stalled.
+- Prefer existing shadcn form primitives already used in the repo (e.g. `Select` from `components/ui/select`) instead of native `<select>` for app forms.
+- Keep public dock behavior/design consistent unless explicitly requested; avoid unrequested structural changes.
 
 ## Data Rules
 
@@ -98,4 +101,8 @@ Optional:
 ## Notes
 
 - If mail provider envs are missing, verification/reset emails may fallback to logs in development.
+- Public-facing pages (`/`, `/about`, `/projects`, `/projects/[slug]`, `/blog`, `/blog/[slug]`, `/contact`) should use a centered container with max width `1024px`.
+- In development, service worker registration should remain disabled/unregistered to avoid stale-cache UX while building.
+- Use Sonner for user feedback toasts on front-facing form mutations.
+- Contact/inquiry emails should use React Email templates for structured output.
 - Update this file when architecture or conventions change.

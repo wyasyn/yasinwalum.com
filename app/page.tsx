@@ -1,241 +1,204 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { format } from "date-fns";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Calendar03Icon,
+  ArrowDown01Icon,
+  ArrowRight01Icon,
   Globe02Icon,
   Mail01Icon,
   NewJobIcon,
   SourceCodeCircleIcon,
-  UserSquareIcon,
 } from "@hugeicons/core-free-icons";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  getPublicPostsData,
   getPublicProfileData,
-  getPublicProjectsData,
+  getPublicProjectsPageData,
   getPublicSocialsData,
+  type PublicProject,
 } from "@/lib/public-queries";
 
 export const revalidate = 60;
 
-export default function PublicPortfolioPage() {
+const PLACEHOLDER_IMAGE_SRC = "/placeholder-image.svg";
+const PROJECTS_PER_PAGE = 8;
+
+type HomePageProps = {
+  searchParams?: Promise<{
+    page?: string;
+  }>;
+};
+
+function getSafeImageSrc(imageUrl: string | null | undefined) {
+  if (!imageUrl) {
+    return PLACEHOLDER_IMAGE_SRC;
+  }
+
+  const normalized = imageUrl.trim();
+  return normalized.length > 0 ? normalized : PLACEHOLDER_IMAGE_SRC;
+}
+
+function parsePositiveInt(value: string | undefined, fallback: number) {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function pairProjects(projects: PublicProject[]) {
+  const pairs: PublicProject[][] = [];
+
+  for (let index = 0; index < projects.length; index += 2) {
+    pairs.push(projects.slice(index, index + 2));
+  }
+
+  return pairs;
+}
+
+export default async function PublicPortfolioPage({ searchParams }: HomePageProps) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const page = parsePositiveInt(resolvedSearchParams.page, 1);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
-      <main className="mx-auto w-full max-w-[1024px] space-y-8 px-4 py-8 md:space-y-10 md:px-6 md:py-12">
-        <Suspense fallback={<HeroSectionLoading />}>
-          <HeroSection />
-        </Suspense>
+    <div className="bg-white px-3">
+      <div className="container relative mx-auto max-w-[1024px]">
+        <main className="flex flex-col gap-3 lg:flex-row lg:items-start">
+          <Suspense fallback={<HeroMediaLoadingSection />}>
+            <HeroMediaSection />
+          </Suspense>
 
-        <Suspense fallback={<ProjectsSectionLoading />}>
-          <ProjectsSection />
-        </Suspense>
+          <section className="flex min-w-0 flex-1 flex-col gap-3 pt-0 lg:pt-3">
+            <Suspense fallback={<ProfileAndSocialsLoadingSection />}>
+              <ProfileAndSocialsSection />
+            </Suspense>
 
-        <Suspense fallback={<BlogSectionLoading />}>
-          <BlogSection />
-        </Suspense>
+            <Suspense fallback={<LatestWorkLoadingSection />}>
+              <LatestWorkSection page={page} />
+            </Suspense>
 
-        <Suspense fallback={<SocialsSectionLoading />}>
-          <SocialsSection />
-        </Suspense>
-      </main>
+            <Suspense fallback={<FooterLoadingSection />}>
+              <FooterSection />
+            </Suspense>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }
 
-async function HeroSection() {
-  const profile = await getPublicProfileData();
+async function HeroMediaSection() {
+  const [profile, projectsPage] = await Promise.all([
+    getPublicProfileData(),
+    getPublicProjectsPageData(1, 1),
+  ]);
+
+  const heroProject = projectsPage.projects[0] ?? null;
+  const heroImageSrc = getSafeImageSrc(heroProject?.thumbnailUrl ?? profile?.avatarUrl);
 
   return (
-    <section className="rounded-3xl border bg-card/70 p-6 backdrop-blur-sm md:p-8">
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-4">
-          <Badge variant="secondary" className="h-6 rounded-full">
-            <HugeiconsIcon icon={UserSquareIcon} className="mr-1 h-3.5 w-3.5" strokeWidth={2} />
-            Portfolio
-          </Badge>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
+    <section
+      id="portfolio"
+      className="min-w-0 flex-1 py-0 lg:sticky lg:top-0 lg:h-[1080px] lg:py-3"
+    >
+      <div className="relative h-[78vh] min-h-[560px] overflow-hidden rounded-xl bg-[#ececec] lg:h-[1056px]">
+        <img
+          src={heroImageSrc}
+          alt={heroProject?.title ?? profile?.fullName ?? "Portfolio image"}
+          className="size-full object-cover"
+          loading="eager"
+        />
+
+        <div className="absolute bottom-0 right-0 rounded-tl-[20px] bg-white px-4 pb-2 pt-3 text-[11px] text-[#0e1011]">
+          {heroProject?.title ?? "Selected Work"}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+async function ProfileAndSocialsSection() {
+  const [profile, socials] = await Promise.all([getPublicProfileData(), getPublicSocialsData()]);
+  const visibleSocials = socials.slice(0, 5);
+
+  return (
+    <section id="about" className="grid gap-3 md:grid-cols-[2fr_300px]">
+      <article className="flex min-h-[382px] flex-col justify-between rounded-xl bg-[#f6f6f6] p-12 text-[#0e1011]">
+        <div className="flex items-center gap-6">
+          <img
+            src={getSafeImageSrc(profile?.avatarUrl)}
+            alt={profile?.fullName ?? "Profile"}
+            className="size-20 rounded-full object-cover"
+            loading="lazy"
+          />
+          <div>
+            <h1 className="text-[18px] font-normal leading-[1.2]">
               {profile?.fullName ?? "Portfolio Owner"}
             </h1>
-            <p className="text-base text-muted-foreground md:text-lg">
-              {profile?.headline ?? "Software engineer building reliable products."}
+            <p className="text-[15px] leading-none text-[#0e1011]/50">
+              {profile?.headline ?? "Creative developer"}
             </p>
-          </div>
-          <p className="max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
-            {profile?.bio ?? "Profile information will appear here once data is added in dashboard."}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {profile?.location ? (
-              <Badge variant="outline" className="h-7 rounded-full">
-                <HugeiconsIcon icon={Globe02Icon} className="mr-1 h-3.5 w-3.5" strokeWidth={2} />
-                {profile.location}
-              </Badge>
-            ) : null}
-            {profile?.email ? (
-              <a href={`mailto:${profile.email}`}>
-                <Badge variant="outline" className="h-7 rounded-full">
-                  <HugeiconsIcon icon={Mail01Icon} className="mr-1 h-3.5 w-3.5" strokeWidth={2} />
-                  {profile.email}
-                </Badge>
-              </a>
-            ) : null}
-            {profile?.resumeUrl ? (
-              <a href={profile.resumeUrl} target="_blank" rel="noreferrer">
-                <Badge variant="outline" className="h-7 rounded-full">
-                  <HugeiconsIcon icon={NewJobIcon} className="mr-1 h-3.5 w-3.5" strokeWidth={2} />
-                  Resume
-                </Badge>
-              </a>
-            ) : null}
           </div>
         </div>
 
-        {profile?.avatarUrl ? (
-          <img
-            src={profile.avatarUrl}
-            alt={profile.fullName}
-            className="h-28 w-28 shrink-0 rounded-3xl border object-cover md:h-36 md:w-36"
-          />
-        ) : null}
-      </div>
-    </section>
-  );
-}
+        <p className="max-w-[500px] text-[16px] leading-[1.6] text-[#0e1011]">
+          {profile?.bio ??
+            "I design and build modern web experiences with strong UX, clear architecture, and reliable delivery."}
+        </p>
 
-async function ProjectsSection() {
-  const projects = await getPublicProjectsData(6);
+        <div className="grid gap-2 text-[14px]">
+          {profile?.location ? (
+            <a
+              href={`https://maps.google.com/?q=${encodeURIComponent(profile.location)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2"
+            >
+              <HugeiconsIcon icon={Globe02Icon} className="size-4" strokeWidth={2} />
+              {profile.location}
+            </a>
+          ) : null}
+          {profile?.email ? (
+            <a href={`mailto:${profile.email}`} className="inline-flex items-center gap-2">
+              <HugeiconsIcon icon={Mail01Icon} className="size-4" strokeWidth={2} />
+              {profile.email}
+            </a>
+          ) : null}
+          {profile?.resumeUrl ? (
+            <a
+              href={profile.resumeUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2"
+            >
+              <HugeiconsIcon icon={NewJobIcon} className="size-4" strokeWidth={2} />
+              Resume
+            </a>
+          ) : null}
+        </div>
+      </article>
 
-  return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold md:text-2xl">Projects</h2>
-        <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
-          Admin
-        </Link>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {projects.length === 0 ? (
-          <Card className="md:col-span-2">
-            <CardContent className="pt-6 text-sm text-muted-foreground">
-              No projects available yet.
-            </CardContent>
-          </Card>
+      <div className="space-y-3">
+        {visibleSocials.length === 0 ? (
+          <div className="rounded-xl bg-[#f6f6f6] p-6 text-sm text-[#0e1011]/70">No socials added yet.</div>
         ) : (
-          projects.map((project) => (
-            <Card key={project.id} className="overflow-hidden">
-              {project.thumbnailUrl ? (
-                <img src={project.thumbnailUrl} alt={project.title} className="h-40 w-full object-cover" />
-              ) : null}
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-2">
-                  <CardTitle className="text-lg">{project.title}</CardTitle>
-                  {project.featured ? <Badge>Featured</Badge> : null}
-                </div>
-                <CardDescription>{project.summary}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {project.skillNames.slice(0, 4).map((name) => (
-                    <Badge key={name} variant="secondary">
-                      {name}
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {project.liveUrl ? (
-                    <Button asChild size="sm">
-                      <a href={project.liveUrl} target="_blank" rel="noreferrer">
-                        <HugeiconsIcon icon={Globe02Icon} className="mr-1 h-4 w-4" strokeWidth={2} />
-                        Live
-                      </a>
-                    </Button>
-                  ) : null}
-                  {project.repoUrl ? (
-                    <Button asChild variant="outline" size="sm">
-                      <a href={project.repoUrl} target="_blank" rel="noreferrer">
-                        <HugeiconsIcon icon={SourceCodeCircleIcon} className="mr-1 h-4 w-4" strokeWidth={2} />
-                        Code
-                      </a>
-                    </Button>
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-    </section>
-  );
-}
-
-async function BlogSection() {
-  const posts = await getPublicPostsData(6);
-
-  return (
-    <section className="space-y-4">
-      <h2 className="text-xl font-semibold md:text-2xl">Blog</h2>
-      <div className="grid gap-4">
-        {posts.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-sm text-muted-foreground">
-              No published posts available yet.
-            </CardContent>
-          </Card>
-        ) : (
-          posts.map((post) => (
-            <Card key={post.id}>
-              <CardHeader>
-                <CardTitle className="text-lg">{post.title}</CardTitle>
-                <CardDescription>{post.excerpt}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <HugeiconsIcon icon={Calendar03Icon} className="h-4 w-4" strokeWidth={2} />
-                  {format(post.publishedAt ?? post.updatedAt, "MMM d, yyyy")}
-                </span>
-                <span className="font-mono text-xs">/{post.slug}</span>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-    </section>
-  );
-}
-
-async function SocialsSection() {
-  const socials = await getPublicSocialsData();
-
-  return (
-    <section className="space-y-4">
-      <h2 className="text-xl font-semibold md:text-2xl">Socials</h2>
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-        {socials.length === 0 ? (
-          <Card className="sm:col-span-2 md:col-span-3">
-            <CardContent className="pt-6 text-sm text-muted-foreground">
-              No social links available yet.
-            </CardContent>
-          </Card>
-        ) : (
-          socials.map((social) => (
-            <a key={social.id} href={social.url} target="_blank" rel="noreferrer" className="block">
-              <Card className="h-full transition-colors hover:border-primary/30 hover:bg-muted/50">
-                <CardContent className="flex items-center gap-3 p-4">
-                  {social.imageUrl ? (
-                    <img src={social.imageUrl} alt={social.name} className="h-8 w-8 rounded-md object-cover" />
-                  ) : (
-                    <div className="h-8 w-8 rounded-md bg-muted" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-medium">{social.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{social.url}</p>
-                  </div>
-                </CardContent>
-              </Card>
+          visibleSocials.map((social, index) => (
+            <a
+              key={social.id}
+              href={social.url}
+              target="_blank"
+              rel="noreferrer"
+              className={`flex h-[66.8px] items-center justify-between rounded-xl px-6 text-[14px] leading-[1.2] ${
+                index === visibleSocials.length - 1
+                  ? "bg-[#0e1011] text-white"
+                  : "bg-[#f6f6f6] text-[#0e1011]"
+              }`}
+            >
+              <span>{social.name}</span>
+              <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />
             </a>
           ))
         )}
@@ -244,75 +207,218 @@ async function SocialsSection() {
   );
 }
 
-function HeroSectionLoading() {
+async function LatestWorkSection({ page }: { page: number }) {
+  const projectsPage = await getPublicProjectsPageData(page, PROJECTS_PER_PAGE);
+  const projectPairs = pairProjects(projectsPage.projects);
+
   return (
-    <section className="rounded-3xl border bg-card/70 p-6 md:p-8">
-      <div className="space-y-4">
-        <div className="h-6 w-24 animate-pulse rounded-full bg-muted/70" />
-        <div className="h-10 w-72 animate-pulse rounded-md bg-muted/70" />
-        <div className="h-5 w-96 max-w-full animate-pulse rounded-md bg-muted/60" />
-        <div className="h-20 w-full animate-pulse rounded-md bg-muted/50" />
+    <section id="projects" className="space-y-3">
+      <div className="flex h-[65px] items-center justify-between rounded-xl bg-[#f6f6f6] px-8 text-[#0e1011]">
+        <div className="inline-flex items-center gap-1.5 text-[14px]">
+          <span>Latest Work</span>
+          <HugeiconsIcon icon={ArrowDown01Icon} className="size-4" strokeWidth={2} />
+        </div>
+        <span className="text-[12px]">{projectsPage.totalItems} total</span>
       </div>
+
+      {projectsPage.projects.length === 0 ? (
+        <div className="rounded-xl bg-[#f6f6f6] p-8 text-sm text-[#0e1011]/70">
+          No projects available yet.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {projectPairs.map((row, rowIndex) => (
+            <div key={rowIndex} className="grid gap-3 md:grid-cols-2">
+              {row.map((project) => (
+                <article
+                  key={project.id}
+                  className="group relative h-[600px] overflow-hidden rounded-xl bg-[#0e1011]"
+                >
+                  <img
+                    src={getSafeImageSrc(project.thumbnailUrl)}
+                    alt={project.title}
+                    className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                    loading="lazy"
+                  />
+
+                  <div className="absolute left-0 top-0 inline-flex items-center gap-1 rounded-br-[20px] bg-white px-4 pb-3 pt-2 text-[14px] text-[#0e1011]">
+                    {project.title}
+                    <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />
+                  </div>
+
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
+                    <p className="text-sm">{project.projectType}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-white/85">{project.summary}</p>
+
+                    <div className="mt-2 flex items-center gap-2 text-xs">
+                      {project.liveUrl ? (
+                        <a
+                          href={project.liveUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded bg-white/15 px-2 py-1 hover:bg-white/25"
+                        >
+                          Live
+                        </a>
+                      ) : null}
+                      {project.repoUrl ? (
+                        <a
+                          href={project.repoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded bg-white/15 px-2 py-1 hover:bg-white/25"
+                        >
+                          <HugeiconsIcon icon={SourceCodeCircleIcon} className="size-3.5" strokeWidth={2} />
+                          Code
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {projectsPage.totalPages > 1 ? (
+        <div className="flex items-center gap-2 rounded-md bg-[#f6f6f6] px-4 py-3 text-xs text-[#0e1011]">
+          {page > 1 ? (
+            <Link href={`/?page=${page - 1}`} className="rounded border px-2 py-1 hover:bg-white">
+              Previous
+            </Link>
+          ) : (
+            <span className="rounded border border-transparent px-2 py-1 text-[#0e1011]/40">Previous</span>
+          )}
+
+          <span>
+            Page {Math.min(page, projectsPage.totalPages)} of {projectsPage.totalPages}
+          </span>
+
+          {page < projectsPage.totalPages ? (
+            <Link href={`/?page=${page + 1}`} className="rounded border px-2 py-1 hover:bg-white">
+              Next
+            </Link>
+          ) : (
+            <span className="rounded border border-transparent px-2 py-1 text-[#0e1011]/40">Next</span>
+          )}
+        </div>
+      ) : null}
     </section>
   );
 }
 
-function ProjectsSectionLoading() {
+async function FooterSection() {
+  const [profile, socials] = await Promise.all([getPublicProfileData(), getPublicSocialsData()]);
+  const topSocials = socials.slice(0, 4);
+
   return (
-    <section className="space-y-4">
-      <div className="h-8 w-28 animate-pulse rounded-md bg-muted/70" />
-      <div className="grid gap-4 md:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Card key={index}>
-            <CardContent className="space-y-4 p-6">
-              <div className="h-6 w-1/2 animate-pulse rounded-md bg-muted/70" />
-              <div className="h-4 w-full animate-pulse rounded-md bg-muted/60" />
-              <div className="h-4 w-4/5 animate-pulse rounded-md bg-muted/50" />
-              <div className="h-8 w-24 animate-pulse rounded-md bg-muted/60" />
-            </CardContent>
-          </Card>
+    <footer id="contact" className="space-y-3 pb-3">
+      <div className="grid gap-3 md:grid-cols-2">
+        {topSocials.map((social) => (
+          <a
+            key={social.id}
+            href={social.url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-[68px] items-center justify-between rounded-xl bg-[#f6f6f6] px-6 text-[14px] text-[#0e1011]"
+          >
+            <span>{social.name}</span>
+            <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />
+          </a>
         ))}
       </div>
-    </section>
-  );
-}
 
-function BlogSectionLoading() {
-  return (
-    <section className="space-y-4">
-      <div className="h-8 w-20 animate-pulse rounded-md bg-muted/70" />
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <Card key={index}>
-            <CardContent className="space-y-3 p-6">
-              <div className="h-6 w-2/3 animate-pulse rounded-md bg-muted/70" />
-              <div className="h-4 w-full animate-pulse rounded-md bg-muted/60" />
-              <div className="h-4 w-1/4 animate-pulse rounded-md bg-muted/50" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function SocialsSectionLoading() {
-  return (
-    <section className="space-y-4">
-      <div className="h-8 w-24 animate-pulse rounded-md bg-muted/70" />
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Card key={index}>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="h-8 w-8 animate-pulse rounded-md bg-muted/70" />
-              <div className="space-y-2">
-                <div className="h-4 w-20 animate-pulse rounded-md bg-muted/60" />
-                <div className="h-3 w-28 animate-pulse rounded-md bg-muted/50" />
+      <div className="rounded-xl bg-[#0e1011] p-8 text-white">
+        <div className="flex flex-col gap-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img
+                src={getSafeImageSrc(profile?.avatarUrl)}
+                alt={profile?.fullName ?? "Profile"}
+                className="size-[60px] rounded-full object-cover"
+                loading="lazy"
+              />
+              <div>
+                <p className="text-[18px] leading-[1.2]">{profile?.fullName ?? "Portfolio Owner"}</p>
+                <p className="text-[15px] leading-none text-white/60">{profile?.headline ?? "Developer"}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <a
+              href={profile?.email ? `mailto:${profile.email}` : "#"}
+              className="rounded-md bg-white px-3.5 py-3 text-[14px] text-[#0e1011]"
+            >
+              Contact Me
+            </a>
+          </div>
+
+          <div className="grid gap-6 text-[14px] text-white/60 md:grid-cols-3">
+            <div>
+              <p className="mb-4 text-[16px] text-white">Pages</p>
+              <p>Portfolio</p>
+              <p>About</p>
+              <p>Projects</p>
+              <p>Contact</p>
+            </div>
+            <div>
+              <p className="mb-4 text-[16px] text-white">CMS</p>
+              <p>Work</p>
+              <p>Work Single</p>
+              <p>Projects</p>
+            </div>
+            <div>
+              <p className="mb-4 text-[16px] text-white">Utility</p>
+              <Link href="/login" className="block w-fit hover:text-white">
+                Admin Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function HeroMediaLoadingSection() {
+  return <div className="h-[78vh] min-h-[560px] animate-pulse rounded-xl bg-[#ececec] lg:h-[1080px] lg:py-3" />;
+}
+
+function ProfileAndSocialsLoadingSection() {
+  return (
+    <div className="grid gap-3 md:grid-cols-[2fr_300px]">
+      <div className="h-[382px] animate-pulse rounded-xl bg-[#f6f6f6]" />
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="h-[66.8px] animate-pulse rounded-xl bg-[#f6f6f6]" />
         ))}
       </div>
+    </div>
+  );
+}
+
+function LatestWorkLoadingSection() {
+  return (
+    <section className="space-y-3">
+      <div className="h-[65px] animate-pulse rounded-xl bg-[#f6f6f6]" />
+      <div className="grid gap-3 md:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-[600px] animate-pulse rounded-xl bg-[#ececec]" />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FooterLoadingSection() {
+  return (
+    <section className="space-y-3 pb-3">
+      <div className="grid gap-3 md:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-[68px] animate-pulse rounded-xl bg-[#f6f6f6]" />
+        ))}
+      </div>
+      <div className="h-[520px] animate-pulse rounded-xl bg-[#0e1011]" />
     </section>
   );
 }

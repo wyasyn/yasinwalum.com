@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ServiceWorkerRegister } from "@/components/local-first/sw-register";
+import { PublicDock } from "@/components/public/public-dock";
+import { Toaster } from "@/components/ui/sonner";
 
 const notoSans = Noto_Sans({ variable: "--font-sans" });
 
@@ -37,6 +39,8 @@ export default function RootLayout({
         >
           <ServiceWorkerRegister />
           {children}
+          <Toaster richColors closeButton />
+          <PublicDock />
         </ThemeProvider>
       </body>
     </html>

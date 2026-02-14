@@ -1,26 +1,39 @@
 export default function HomeLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
-      <main className="mx-auto w-full max-w-[1024px] space-y-8 px-4 py-8 md:space-y-10 md:px-6 md:py-12">
-        <section className="rounded-3xl border bg-card/70 p-6 md:p-8">
-          <div className="space-y-4">
-            <div className="h-6 w-24 animate-pulse rounded-full bg-muted/70" />
-            <div className="h-10 w-72 animate-pulse rounded-md bg-muted/70" />
-            <div className="h-5 w-96 max-w-full animate-pulse rounded-md bg-muted/60" />
-            <div className="h-20 w-full animate-pulse rounded-md bg-muted/50" />
-          </div>
-        </section>
+    <div className="min-h-screen bg-[#ffffff] px-3 pb-3">
+      <div className="sticky top-3 z-20 mx-auto h-10 w-[440px] max-w-full animate-pulse rounded-br-[20px] bg-[#f6f6f6]" />
 
-        <section className="space-y-4">
-          <div className="h-8 w-28 animate-pulse rounded-md bg-muted/70" />
-          <div className="grid gap-4 md:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="rounded-xl border bg-card p-6">
-                <div className="h-6 w-1/2 animate-pulse rounded-md bg-muted/70" />
-                <div className="mt-3 h-4 w-full animate-pulse rounded-md bg-muted/60" />
-                <div className="mt-2 h-4 w-4/5 animate-pulse rounded-md bg-muted/50" />
+      <main className="mx-auto mt-3 max-w-[1900px]">
+        <section className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <div className="h-[58vh] min-h-[520px] animate-pulse rounded-xl bg-[#ececec] lg:h-[calc(100vh-24px)]" />
+
+          <div className="space-y-3 pb-3 lg:pt-3">
+            <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
+              <div className="h-[380px] animate-pulse rounded-xl bg-[#f6f6f6]" />
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="h-[66px] animate-pulse rounded-xl bg-[#f6f6f6]" />
+                ))}
               </div>
-            ))}
+            </div>
+
+            <section className="space-y-3">
+              <div className="h-[65px] animate-pulse rounded-xl bg-[#f6f6f6]" />
+              <div className="grid gap-3 md:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="h-[420px] animate-pulse rounded-xl bg-[#ececec]" />
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="h-[56px] animate-pulse rounded-xl bg-[#f6f6f6]" />
+                ))}
+              </div>
+              <div className="h-[280px] animate-pulse rounded-xl bg-[#0e1011]" />
+            </section>
           </div>
         </section>
       </main>
